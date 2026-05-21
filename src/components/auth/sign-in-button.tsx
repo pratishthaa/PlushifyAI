@@ -24,6 +24,29 @@ export function SignInButton() {
     return null
   }
 
+  const handleGoogleSignIn = async () => {
+    setError("")
+    setIsPending(true)
+
+    try {
+      const result = await signIn.social({
+        provider: "google",
+        callbackURL: "/dashboard",
+      })
+
+      if (result?.error) {
+        setError(result.error.message || "Google sign-in failed")
+        setIsPending(false)
+      }
+    } catch (err) {
+      console.error("Google sign-in error:", err)
+      setError(
+        err instanceof Error ? err.message : "Google sign-in failed"
+      )
+      setIsPending(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
@@ -42,8 +65,11 @@ export function SignInButton() {
         router.push("/dashboard")
         router.refresh()
       }
-    } catch {
-      setError("An unexpected error occurred")
+    } catch (err) {
+      console.error("Email sign-in error:", err)
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      )
     } finally {
       setIsPending(false)
     }
@@ -51,6 +77,27 @@ export function SignInButton() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full"
+        onClick={handleGoogleSignIn}
+        disabled={isPending}
+      >
+        {isPending ? "Signing in..." : "Continue with Google"}
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with email
+          </span>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -63,6 +110,7 @@ export function SignInButton() {
           disabled={isPending}
         />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input
@@ -75,17 +123,19 @@ export function SignInButton() {
           disabled={isPending}
         />
       </div>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
       <Button type="submit" className="w-full" disabled={isPending}>
         {isPending ? "Signing in..." : "Sign in"}
       </Button>
+
       <div className="text-center text-sm text-muted-foreground">
         <Link href="/forgot-password" className="hover:underline">
           Forgot password?
         </Link>
       </div>
+
       <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
         <Link href="/register" className="text-primary hover:underline">
